@@ -24,13 +24,26 @@ features = [
 
 inputs = {}
 
+default_values = {
+    "Industrial Risk": 0,
+    "Management Risk": 0,
+    "Financial Flexibility": 1,
+    "Credibility": 1,
+    "Competitiveness": 1,
+    "Operating Risk": 0
+}
+
+
+
 for feature in features:
+    options = [0, 0.5, 1]
+    default_index = options.index(default_values[feature])
+
     inputs[feature] = st.selectbox(
         feature,
-        options=[0, 0.5, 1],
-        index=2
+        options=options,
+        index=default_index
     )
-
 # Convert input to DataFrame
 input_df = pd.DataFrame([inputs])
 
