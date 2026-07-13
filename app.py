@@ -2,12 +2,15 @@ import streamlit as st
 import pandas as pd
 import joblib
 
-# -----------------------------
+# ===============================
 # Load Model and Scaler
-# -----------------------------
+# ===============================
 model = joblib.load("bankruptcy_model.pkl")
 scaler = joblib.load("scaler.pkl")
 
+# ===============================
+# Page Configuration
+# ===============================
 st.set_page_config(
     page_title="Bankruptcy Prediction",
     page_icon="💼",
@@ -15,85 +18,98 @@ st.set_page_config(
 )
 
 st.title("💼 Company Bankruptcy Prediction")
-
-st.write("Select the values below and click Predict.")
+st.write("Select the values for each feature and click **Predict**.")
 
 st.markdown("---")
 
-# -----------------------------
-# Input Fields
-# -----------------------------
+# ===============================
+# User Inputs
+# ===============================
 
 industrial_risk = st.selectbox(
     "Industrial Risk",
-    [0, 0.5, 1],
+    options=[0, 0.5, 1],
     index=0
 )
 
 management_risk = st.selectbox(
     "Management Risk",
-    [0, 0.5, 1],
+    options=[0, 0.5, 1],
     index=0
 )
 
 financial_flexibility = st.selectbox(
     "Financial Flexibility",
-    [0, 0.5, 1],
+    options=[0, 0.5, 1],
     index=2
 )
 
 credibility = st.selectbox(
     "Credibility",
-    [0, 0.5, 1],
+    options=[0, 0.5, 1],
     index=2
 )
 
 competitiveness = st.selectbox(
     "Competitiveness",
-    [0, 0.5, 1],
+    options=[0, 0.5, 1],
     index=2
 )
 
 operating_risk = st.selectbox(
     "Operating Risk",
-    [0, 0.5, 1],
+    options=[0, 0.5, 1],
     index=0
 )
 
-# -----------------------------
-# Create DataFrame
-# -----------------------------
-
-input_data = pd.DataFrame({
-    "industrial_risk": [industrial_risk],
-    "management_risk": [management_risk],
-    "financial_flexibility": [financial_flexibility],
-    "credibility": [credibility],
-    "competitiveness": [competitiveness],
-    "operating_risk": [operating_risk]
-})
-
-# -----------------------------
-# Prediction
-# -----------------------------
+# ===============================
+# Predict Button
+# ===============================
 
 if st.button("Predict"):
 
-    scaled_data = scaler.transform(input_data)
+    # Create DataFrame with EXACT feature names
+    input_df = pd.DataFrame(
+        [[
+            industrial_risk,
+            management_risk,
+            financial_flexibility,
+            credibility,
+            competitiveness,
+            operating_risk
+        ]],
+        columns=[
+            "industrial_risk",
+            "management_risk",
+            "financial_flexibility",
+            "credibility",
+            "competitiveness",
+            "operating_risk"
+        ]
+    )
 
-    prediction = model.predict(scaled_data)[0]
+    # Scale the input
+    input_scaled = scaler.transform(input_df)
 
-    probability = model.predict_proba(scaled_data)[0]
+    # Predict
+    prediction = model.predict(input_scaled)[0]
+
+    # Probability
+    if hasattr(model, "predict_proba"):
+        probability = model.predict_proba(input_scaled)[0]
 
     st.markdown("---")
 
+    st.subheader("Prediction Result")
+
     if prediction == 1:
-        st.error("⚠️ Prediction: Bankrupt")
+        st.error("⚠️ Bankrupt")
     else:
-        st.success("✅ Prediction: Not Bankrupt")
+        st.success("✅ Not Bankrupt")
 
-    st.subheader("Prediction Probability")
+    # Display probabilities
+    if hasattr(model, "predict_proba"):
+        st.subheader("Prediction Probability")
 
-    st.write(f"Not Bankrupt : **{probability[0]*100:.2f}%**")
-
-    st.write(f"Bankrupt : **{probability[1]*100:.2f}%**")
+        st.write(f"**Not Bankrupt:** {probability[0] * 100:.2f}%")
+        st.write(f"**Bankrupt:** {probability[1] * 100:.2f}%")
